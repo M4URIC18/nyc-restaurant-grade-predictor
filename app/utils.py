@@ -12,46 +12,44 @@ from typing import Tuple, Optional, Dict
 
 def load_model(model_path=None):
     """
-    Load the trained RandomForestClassifier model.
-    Tries multiple common paths for local and Streamlit Cloud environments.
+    Load the trained model saved with joblib.
+    Works both locally and on Streamlit Cloud.
     """
-    import sys
-    import pickle
     import os
+    import joblib
 
-    # If a specific path is provided
-    if model_path and os.path.exists(model_path):
-        with open(model_path, 'rb') as f:
-            return pickle.load(f)
-
-    # Resolve directories
+    # Directories to search
     app_dir = os.path.dirname(os.path.abspath(__file__))
     parent_dir = os.path.dirname(app_dir)
     root_dir = os.path.dirname(parent_dir)
 
-    # Try common paths
+    # Possible model paths
     possible_paths = [
+        model_path,
         os.path.join(app_dir, 'baseline_model.pkl'),
-        os.path.join(app_dir, 'model.pkl'),
         os.path.join(parent_dir, 'baseline_model.pkl'),
-        os.path.join(parent_dir, 'model.pkl'),
         os.path.join(root_dir, 'baseline_model.pkl'),
+        os.path.join(app_dir, 'model.pkl'),
+        os.path.join(parent_dir, 'model.pkl'),
         os.path.join(root_dir, 'model.pkl'),
-        'baseline_model.pkl',
-        'model.pkl'
     ]
+    possible_paths = [p for p in possible_paths if p]
 
+    # Try to load model
     for path in possible_paths:
         if os.path.exists(path):
-            with open(path, 'rb') as f:
-                model = pickle.load(f)
-            return model
+            try:
+                model = joblib.load(path)
+                return model
+            except Exception as e:
+                raise Exception(f"❌ Failed to load model from {path}: {e}")
 
     raise FileNotFoundError(
-        "❌ Model file not found.\n\n"
+        "❌ Model file not found.\n"
         "Make sure 'baseline_model.pkl' or 'model.pkl' exists in the root or app/ folder.\n"
         "Expected in one of:\n" + "\n".join(possible_paths)
     )
+
 
 
 
