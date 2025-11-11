@@ -13,49 +13,46 @@ from typing import Tuple, Optional, Dict
 def load_model(model_path=None):
     """
     Load the trained RandomForestClassifier model.
-    
-    Args:
-        model_path: Path to the model file. If None, tries common locations.
-        
-    Returns:
-        Loaded model object
-        
-    Raises:
-        FileNotFoundError: If model file is not found
-        Exception: If model cannot be loaded
+    Tries multiple common paths for local and Streamlit Cloud environments.
     """
-    if model_path is None:
-        # Try multiple possible locations
-        # Get the directory where this file is located (app/)
-        app_dir = os.path.dirname(os.path.abspath(__file__))
-        parent_dir = os.path.dirname(app_dir)
-        
-        possible_paths = [
-            os.path.join(app_dir, 'baseline_model.pkl'),
-            os.path.join(app_dir, 'model.pkl'),
-            os.path.join(parent_dir, 'baseline_model.pkl'),
-            os.path.join(parent_dir, 'model.pkl'),
-            'baseline_model.pkl',
-            'model.pkl',
-        ]
-        
-        for path in possible_paths:
-            if os.path.exists(path):
-                model_path = path
-                break
-        
-        if model_path is None:
-            raise FileNotFoundError(
-                "Model file not found. Please ensure 'baseline_model.pkl' or 'model.pkl' "
-                "exists in the current directory, parent directory, or 'app' folder."
-            )
-    
-    try:
+    import sys
+    import pickle
+    import os
+
+    # If a specific path is provided
+    if model_path and os.path.exists(model_path):
         with open(model_path, 'rb') as f:
-            model = pickle.load(f)
-        return model
-    except Exception as e:
-        raise Exception(f"Error loading model: {str(e)}")
+            return pickle.load(f)
+
+    # Resolve directories
+    app_dir = os.path.dirname(os.path.abspath(__file__))
+    parent_dir = os.path.dirname(app_dir)
+    root_dir = os.path.dirname(parent_dir)
+
+    # Try common paths
+    possible_paths = [
+        os.path.join(app_dir, 'baseline_model.pkl'),
+        os.path.join(app_dir, 'model.pkl'),
+        os.path.join(parent_dir, 'baseline_model.pkl'),
+        os.path.join(parent_dir, 'model.pkl'),
+        os.path.join(root_dir, 'baseline_model.pkl'),
+        os.path.join(root_dir, 'model.pkl'),
+        'baseline_model.pkl',
+        'model.pkl'
+    ]
+
+    for path in possible_paths:
+        if os.path.exists(path):
+            with open(path, 'rb') as f:
+                model = pickle.load(f)
+            return model
+
+    raise FileNotFoundError(
+        "❌ Model file not found.\n\n"
+        "Make sure 'baseline_model.pkl' or 'model.pkl' exists in the root or app/ folder.\n"
+        "Expected in one of:\n" + "\n".join(possible_paths)
+    )
+
 
 
 def get_feature_names():
