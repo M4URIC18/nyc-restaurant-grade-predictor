@@ -70,32 +70,37 @@ def get_feature_names():
     ]
 
 
-def prepare_input_data(borough, cuisine_description, inspection_type, 
-                      nfh_indexscore, median_income, poverty_rate):
+
+
+def prepare_input_data(borough, cuisine_description, inspection_type,
+                       nfh_indexscore, median_income, poverty_rate):
     """
-    Prepare input data for prediction.
-    
-    Args:
-        borough: Borough name (str)
-        cuisine_description: Cuisine type (str)
-        inspection_type: Inspection type (str)
-        nfh_indexscore: NFH index score (float)
-        median_income: Median income (float)
-        poverty_rate: Poverty rate (float)
-        
-    Returns:
-        DataFrame with prepared features
+    Prepare a single input row matching the model's expected features.
+    The model expects: 
+    ['boro', 'cuisine_description', 'score', 'median_income', 'poverty_rate',
+     'perc_white', 'perc_black', 'perc_asian', 'perc_hispanic', 'indexscore']
     """
-    data = {
-        'borough': [borough],
+    # Rename borough → boro
+    boro = borough
+
+    # Create a base dataframe with the correct structure
+    input_dict = {
+        'boro': [boro],
         'cuisine_description': [cuisine_description],
-        'inspection_type': [inspection_type],
-        'nfh_indexscore': [float(nfh_indexscore)],
-        'median_income': [float(median_income)],
-        'poverty_rate': [float(poverty_rate)]
+        'score': [10.0],               # Placeholder (e.g., average inspection score)
+        'median_income': [median_income],
+        'poverty_rate': [poverty_rate],
+        'perc_white': [0.4],           # Default demographic placeholders
+        'perc_black': [0.2],
+        'perc_asian': [0.2],
+        'perc_hispanic': [0.2],
+        'indexscore': [nfh_indexscore] # Map app’s NFH score to model’s indexscore
     }
-    
-    return pd.DataFrame(data)
+
+    df_input = pd.DataFrame(input_dict)
+
+    return df_input
+
 
 
 def predict_grade(model, input_data):
